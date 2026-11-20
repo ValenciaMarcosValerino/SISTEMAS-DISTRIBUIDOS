@@ -2,7 +2,7 @@
 import socket
 import threading
 import json
-
+from db import registrar_usuario
 
 # CLASE CLIENTE
 
@@ -63,9 +63,11 @@ def buscar_cliente(nombre):
     return None
 
 
+
 # FUNCIÓN PARA ASIGNAR NOMBRE AL CLIENTE
 
 def setName(cliente, nombre):
+
     nombre = nombre.strip()
 
     if not nombre or len(nombre) > 30 or nombre.casefold() == "chat general":
@@ -92,6 +94,21 @@ def setName(cliente, nombre):
         })
         return False
 
+    try:
+        registrar_usuario(nombre)
+
+    except Exception as error:
+        with clientes_lock:
+            cliente.name = ""
+
+        print(f"Error en BDD: {error}")
+
+        enviar(cliente, {
+            "type": "error",
+            "text": "No se pudo registrar el usuario."
+        })
+        return False
+
     enviar(cliente, {
         "type": "system",
         "text": f"Bienvenido {nombre}"
@@ -105,7 +122,6 @@ def setName(cliente, nombre):
     enviar_lista_usuarios()
 
     return True
-
 
 # FUNCIÓN PARA ENVIAR LA LISTA DE USUARIOS
 
