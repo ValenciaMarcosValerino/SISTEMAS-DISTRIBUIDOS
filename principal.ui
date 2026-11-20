@@ -6,44 +6,61 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>493</width>
-    <height>414</height>
+    <width>800</width>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Messenger</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0" colspan="2">
-     <widget class="QPlainTextEdit" name="txtMsgs">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::Box</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Raised</enum>
-      </property>
-      <property name="readOnly">
-       <bool>true</bool>
-      </property>
-     </widget>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QListWidget" name="listWidget"/>
+      </item>
+      <item>
+       <widget class="QPlainTextEdit" name="txtMsgs">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Shape::Box</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Shadow::Raised</enum>
+        </property>
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
-    <item row="1" column="0">
-     <widget class="QLineEdit" name="txtSend">
-      <property name="maxLength">
-       <number>1023</number>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="1">
-     <widget class="QPushButton" name="btnSend">
-      <property name="text">
-       <string>Enviar</string>
-      </property>
-     </widget>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLineEdit" name="txtSend">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="maxLength">
+         <number>1023</number>
+        </property>
+        <property name="placeholderText">
+         <string extracomment="Escribe tu mesaje aqui"/>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnSend">
+        <property name="text">
+         <string>Enviar</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
@@ -52,8 +69,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>493</width>
-     <height>21</height>
+     <width>800</width>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuArchivo">

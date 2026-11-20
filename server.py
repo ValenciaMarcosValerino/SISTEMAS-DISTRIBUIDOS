@@ -1,158 +1,256 @@
 
 import socket
 import threading
+import json
 
 
 # CLASE CLIENTE
-# Almacena los datos de cada usuario conectado.
 
 class Cliente:
-    def __init__(self):
+    def __init__(self, conn, addr):
         self.name = ""
-        self.conn = None
-        self.addr = None
+        self.conn = conn
+        self.addr = addr
+        self.send_lock = threading.Lock()
+
 
 # VARIABLES DEL SERVIDOR
 
-
 host = "127.0.0.1"
 port = 5000
-BUFFER_SIZE = 1024
+BUFFER_SIZE = 4096
 
 list_of_clients = []
 clientes_lock = threading.Lock()
 
-# FUNCIÓN PARA ATENDER A CADA CLIENTE
 
-def clientthread(conn, addr):
-    """
-    Atiende la comunicación con un cliente.
+# FUNCIÓN PARA ENVIAR DATOS
 
-    Recibe sus mensajes, identifica comandos
-    y reenvía los mensajes a los demás usuarios.
-    """
+def enviar(cliente, mensaje):
+    datos = (json.dumps(mensaje, ensure_ascii=False) + "\n").encode("utf-8")
 
     try:
-        conn.sendall(bytes(f"Bienvenido {addr}\n", "utf-8"))
+        with cliente.send_lock:
+            cliente.conn.sendall(datos)
+        return True
 
-        while True:
-            message = conn.recv(BUFFER_SIZE)
+    except OSError:
+        return False
 
-            # Si no llegan datos, el cliente se desconectó.
-            if not message:
-                break
 
-            msg = message.decode("utf-8")
+# FUNCIÓN PARA ENVIAR MENSAJES A TODOS
 
-            print(f"<{addr[0]}> {msg}")
+def broadcast(mensaje, excluir=None):
+    with clientes_lock:
+        clientes = [
+            c for c in list_of_clients
+            if c.name and c != excluir
+        ]
 
-            # Registrar nombre del usuario.
-            if msg.startswith("<name>"):
-                nombre = msg.removeprefix("<name>")
-                setName(conn, nombre)
+    for cliente in clientes:
+        if not enviar(cliente, mensaje):
+            remove(cliente)
 
-            # Procesar comandos especiales.
-            elif msg.startswith("<command>"):
-                broadcast(msg + "\n", conn)
 
-            # Mensajes normales.
-            else:
-                nombre = getName(conn)
+# FUNCIÓN PARA OBTENER UN CLIENTE
 
-                message_to_send = f"<{nombre}> {msg}\n"
+def buscar_cliente(nombre):
+    with clientes_lock:
+        for cliente in list_of_clients:
+            if cliente.name.casefold() == nombre.casefold() and cliente.name:
+                return cliente
 
-                broadcast(message_to_send, conn)
+    return None
 
-    except (OSError, UnicodeError) as error:
-        print(f"Error de comunicación con {addr}: {error}")
-
-    finally:
-        remove(conn)
-        conn.close()
 
 # FUNCIÓN PARA ASIGNAR NOMBRE AL CLIENTE
 
+def setName(cliente, nombre):
+    nombre = nombre.strip()
 
-def setName(connection, name: str):
-    """
-    Busca al cliente y almacena su nombre de usuario.
-    """
+    if not nombre or len(nombre) > 30 or nombre.casefold() == "chat general":
+        enviar(cliente, {
+            "type": "error",
+            "text": "Nombre de usuario no válido."
+        })
+        return False
 
     with clientes_lock:
-        for client in list_of_clients:
-            if client.conn == connection:
-                client.name = name
+        existe = any(
+            c.name.casefold() == nombre.casefold()
+            for c in list_of_clients
+            if c.name
+        )
+
+        if not existe:
+            cliente.name = nombre
+
+    if existe:
+        enviar(cliente, {
+            "type": "error",
+            "text": f"El usuario {nombre} ya está conectado."
+        })
+        return False
+
+    enviar(cliente, {
+        "type": "system",
+        "text": f"Bienvenido {nombre}"
+    })
+
+    broadcast({
+        "type": "system",
+        "text": f"{nombre} se ha conectado."
+    }, cliente)
+
+    enviar_lista_usuarios()
+
+    return True
+
+
+# FUNCIÓN PARA ENVIAR LA LISTA DE USUARIOS
+
+def enviar_lista_usuarios():
+    with clientes_lock:
+        nombres = [
+            c.name for c in list_of_clients
+            if c.name
+        ]
+
+    broadcast({
+        "type": "users",
+        "users": nombres
+    })
+
+
+# FUNCIÓN PARA ELIMINAR CLIENTES
+
+def remove(cliente):
+    with clientes_lock:
+        if cliente not in list_of_clients:
+            return
+
+        list_of_clients.remove(cliente)
+        nombre = cliente.name
+
+    try:
+        cliente.conn.shutdown(socket.SHUT_RDWR)
+    except OSError:
+        pass
+
+    cliente.conn.close()
+
+    print(f"Cliente desconectado: {cliente.addr}")
+
+    if nombre:
+        broadcast({
+            "type": "system",
+            "text": f"{nombre} se ha desconectado."
+        })
+
+        enviar_lista_usuarios()
+
+
+# FUNCIÓN PARA ATENDER A CADA CLIENTE
+
+def clientthread(cliente):
+    buffer = b""
+
+    try:
+        while True:
+            datos = cliente.conn.recv(BUFFER_SIZE)
+
+            if not datos:
                 break
 
-# FUNCIÓN PARA OBTENER EL NOMBRE DEL CLIENTE
+            buffer += datos
 
-def getName(connection) -> str:
-    """
-    Devuelve el nombre del usuario asociado
-    con una conexión.
-    """
-
-    with clientes_lock:
-        for client in list_of_clients:
-            if client.conn == connection:
-                return client.name
-
-    return ""
-
-# FUNCIÓN PARA ENVIAR MENSAJES A OTROS CLIENTES
-
-def broadcast(message, connection):
-    """
-    Envía un mensaje a todos los clientes conectados,
-    excepto al cliente que lo envió.
-    """
-
-    with clientes_lock:
-        clientes = list_of_clients[:]
-
-    for client in clientes:
-        if client.conn != connection:
-            try:
-                client.conn.sendall(bytes(message, "utf-8"))
-
-            except OSError:
-                remove(client.conn)
-                client.conn.close()
-
-
-# FUNCIÓN PARA ELIMINAR CLIENTES DESCONECTADOS
-
-def remove(connection):
-    """
-    Recorre la lista de clientes y busca el objeto
-    cuya conexión coincide con la recibida.
-
-    Si lo encuentra, lo elimina de la lista.
-    """
-
-    with clientes_lock:
-        for client in list_of_clients[:]:
-            if client.conn == connection:
-                list_of_clients.remove(client)
-
-                print(
-                    f"Cliente desconectado: {client.addr}"
-                )
-
+            if len(buffer) > 1048576:
                 break
+
+            while b"\n" in buffer:
+                linea, buffer = buffer.split(b"\n", 1)
+
+                if not linea:
+                    continue
+
+                try:
+                    mensaje = json.loads(linea.decode("utf-8"))
+                except (UnicodeError, ValueError):
+                    enviar(cliente, {
+                        "type": "error",
+                        "text": "Formato de mensaje no válido."
+                    })
+                    continue
+
+                if not isinstance(mensaje, dict):
+                    continue
+
+                tipo = mensaje.get("type")
+
+                if not cliente.name:
+                    nombre = mensaje.get("name")
+
+                    if tipo != "join" or not isinstance(nombre, str):
+                        return
+
+                    if not setName(cliente, nombre):
+                        return
+
+                    continue
+
+                if tipo == "public":
+                    texto = mensaje.get("text", "")
+
+                    if isinstance(texto, str) and texto.strip():
+                        broadcast({
+                            "type": "public",
+                            "from": cliente.name,
+                            "text": texto
+                        }, cliente)
+
+                elif tipo == "private":
+                    destino = mensaje.get("to", "")
+                    texto = mensaje.get("text", "")
+
+                    if not isinstance(destino, str) or not isinstance(texto, str):
+                        continue
+
+                    receptor = buscar_cliente(destino)
+
+                    if receptor is None or receptor == cliente:
+                        enviar(cliente, {
+                            "type": "error",
+                            "text": "Destinatario no disponible."
+                        })
+                        continue
+
+                    if texto.strip():
+                        if not enviar(receptor, {
+                            "type": "private",
+                            "from": cliente.name,
+                            "text": texto
+                        }):
+                            remove(receptor)
+                            enviar(cliente, {
+                                "type": "error",
+                                "text": "No se pudo entregar el mensaje privado."
+                            })
+
+    except OSError as error:
+        print(f"Error de conexión: {error}")
+
+    finally:
+        remove(cliente)
 
 
 # FUNCIÓN PRINCIPAL DEL SERVIDOR
 
 if __name__ == "__main__":
-
-    # Crear socket TCP.
     server = socket.socket(
         socket.AF_INET,
         socket.SOCK_STREAM
     )
 
-    # Permitir reutilizar el puerto.
     server.setsockopt(
         socket.SOL_SOCKET,
         socket.SO_REUSEADDR,
@@ -160,59 +258,42 @@ if __name__ == "__main__":
     )
 
     try:
-        # Asociar IP y puerto.
         server.bind((host, port))
-
-        # Escuchar conexiones entrantes.
         server.listen(100)
 
         print(f"Escuchando conexiones en: {(host, port)}")
 
         while True:
-
-            # Esperar un cliente.
             conn, addr = server.accept()
 
-            # Crear objeto para el nuevo cliente.
-            nuevo_cliente = Cliente()
+            nuevo_cliente = Cliente(conn, addr)
 
-            nuevo_cliente.conn = conn
-            nuevo_cliente.addr = addr
-
-            # Agregarlo a la lista.
             with clientes_lock:
                 list_of_clients.append(nuevo_cliente)
 
             print(f"Cliente conectado: {addr}")
 
-            # Crear un hilo para atender al cliente.
             hilo = threading.Thread(
                 target=clientthread,
-                args=(conn, addr),
+                args=(nuevo_cliente,),
                 daemon=True
             )
 
             hilo.start()
 
     except KeyboardInterrupt:
-        print("\nServidor detenido por el usuario.")
+        print("\nServidor detenido.")
 
     except OSError as error:
         print(f"Error del servidor: {error}")
 
     finally:
-        # Cerrar conexiones activas.
         with clientes_lock:
             clientes = list_of_clients[:]
             list_of_clients.clear()
 
-        for client in clientes:
-            try:
-                client.conn.shutdown(socket.SHUT_RDWR)
-            except OSError:
-                pass
-
-            client.conn.close()
+        for cliente in clientes:
+            cliente.conn.close()
 
         server.close()
 
