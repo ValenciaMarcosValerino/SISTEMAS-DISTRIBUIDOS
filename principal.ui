@@ -3,37 +3,20 @@
  <class>Messenger</class>
  <widget class="QMainWindow" name="Messenger">
   <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>800</width>
-    <height>500</height>
-   </rect>
+   <rect><x>0</x><y>0</y><width>1100</width><height>650</height></rect>
   </property>
-  <property name="windowTitle">
-   <string>Messenger</string>
-  </property>
+  <property name="windowTitle"><string>Messenger</string></property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QListWidget" name="listWidget"/>
-      </item>
+      <item><widget class="QListWidget" name="listWidget"/></item>
       <item>
        <widget class="QPlainTextEdit" name="txtMsgs">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::Shape::Box</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Shadow::Raised</enum>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
+        <property name="enabled"><bool>true</bool></property>
+        <property name="frameShape"><enum>QFrame::Shape::Box</enum></property>
+        <property name="frameShadow"><enum>QFrame::Shadow::Raised</enum></property>
+        <property name="readOnly"><bool>true</bool></property>
        </widget>
       </item>
      </layout>
@@ -42,22 +25,14 @@
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
        <widget class="QLineEdit" name="txtSend">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="maxLength">
-         <number>1023</number>
-        </property>
-        <property name="placeholderText">
-         <string extracomment="Escribe tu mesaje aqui"/>
-        </property>
+        <property name="enabled"><bool>true</bool></property>
+        <property name="maxLength"><number>4000</number></property>
+        <property name="placeholderText"><string>Escribe tu mensaje aquí...</string></property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="btnSend">
-        <property name="text">
-         <string>Enviar</string>
-        </property>
+        <property name="text"><string>Enviar</string></property>
        </widget>
       </item>
      </layout>
@@ -66,38 +41,47 @@
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>33</height>
-    </rect>
+    <rect><x>0</x><y>0</y><width>1100</width><height>33</height></rect>
    </property>
    <widget class="QMenu" name="menuArchivo">
-    <property name="title">
-     <string>&amp;Archivo</string>
-    </property>
+    <property name="title"><string>&amp;Archivo</string></property>
     <addaction name="actionConectar"/>
     <addaction name="separator"/>
     <addaction name="actionSalir"/>
    </widget>
+   <widget class="QMenu" name="menuServidores">
+    <property name="title"><string>Servidores</string></property>
+    <addaction name="actionCrearServidor"/>
+   </widget>
+   <widget class="QMenu" name="menuGrupos">
+    <property name="title"><string>Grupos</string></property>
+    <addaction name="actionCrearGrupo"/>
+    <addaction name="actionAgregarIntegrante"/>
+    <addaction name="actionActualizarGrupos"/>
+   </widget>
    <addaction name="menuArchivo"/>
+   <addaction name="menuServidores"/>
+   <addaction name="menuGrupos"/>
   </widget>
   <action name="actionConectar">
-   <property name="text">
-    <string>Co&amp;nectar</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+C</string>
-   </property>
+   <property name="text"><string>Co&amp;nectar</string></property>
+   <property name="shortcut"><string>Ctrl+C</string></property>
   </action>
   <action name="actionSalir">
-   <property name="text">
-    <string>&amp;Salir</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+X</string>
-   </property>
+   <property name="text"><string>&amp;Salir</string></property>
+   <property name="shortcut"><string>Ctrl+X</string></property>
+  </action>
+  <action name="actionCrearServidor">
+   <property name="text"><string>Crear Servidor</string></property>
+  </action>
+  <action name="actionCrearGrupo">
+   <property name="text"><string>Crear grupo...</string></property>
+  </action>
+  <action name="actionAgregarIntegrante">
+   <property name="text"><string>Agregar integrante conectado...</string></property>
+  </action>
+  <action name="actionActualizarGrupos">
+   <property name="text"><string>Actualizar mis grupos</string></property>
   </action>
  </widget>
  <resources/>

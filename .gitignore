@@ -1,0 +1,31 @@
+# Datos privados: no publicar
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+
+# Python y entornos virtuales
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+.pytest_cache/
+
+# Respaldos, logs y paquetes locales
+respaldo/
+Practica1Chat_Respaldo/
+*.zip
+*.log
+
+# Exportaciones y respaldos con datos de usuarios
+papois67_SOLO_DATOS.sql
+generar_solo_datos_papois67.py
+*.bak
+*.bacpac
+
+# Guias anteriores (se sustituye por README.md y GUIA_EQUIPO.md)
+GUIA_EJECUCION_PRACTICA1CHAT.txt
+GUIA_RAPIDA_PRACTICA1CHAT.txt
+INSTRUCCIONES.txt
