@@ -114,6 +114,7 @@ def conectar_bd():
     base_datos = os.getenv("SQL_MESSENGER_DATABASE", "BDD_Messenger").strip()
     usuario_sql = os.getenv("SQL_MESSENGER_USER", "sa").strip()
     password = os.getenv("SQL_MESSENGER_PASSWORD")
+    port = 1433
 
     if not password:
         raise RuntimeError("Falta SQL_MESSENGER_PASSWORD en el archivo .env")
@@ -123,7 +124,7 @@ def conectar_bd():
 
     return pyodbc.connect(
         "DRIVER={ODBC Driver 18 for SQL Server};"
-        f"SERVER={servidor};"
+        f"SERVER={servidor}, ¨{port};"
         f"DATABASE={base_datos};"
         f"UID={usuario_sql};"
         "Encrypt=yes;"
@@ -502,7 +503,7 @@ def obtener_o_crear_conversacion_directa(id_usuario1, id_usuario2):
 
     finally:
         conexion.close()
-
+        
 # GUARDAR MENSAJES PRIVADOS
 
 def guardar_mensaje_privado(id_remitente, id_destinatario, contenido):
@@ -1394,7 +1395,7 @@ def obtener_historial_canal_difusion(id_canal, id_usuario):
 
     finally:
         conexion.close()
-
+        
 #FOTOGRAFIAS
 
 def guardar_foto_perfil(id_usuario, datos_imagen, nombre_archivo, mime):
@@ -1504,3 +1505,6 @@ def obtener_foto_perfil(id_usuario):
 
     finally:
         conexion.close()
+
+
+
