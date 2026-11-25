@@ -8,9 +8,9 @@ import os
 from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QApplication
 
-SERVER_HOST = os.environ.get("PAPOI_SERVER_HOST", "127.0.0.1")
+SERVER_HOST = os.environ.get("PAPOI_SERVER_HOST", "3.149.102.2")
 try:
-    SERVER_PORT = int(os.environ.get("PAPOI_SERVER_PORT", "5000"))
+    SERVER_PORT = int(os.environ.get("PAPOI_SERVER_PORT", "3072"))
 except ValueError:
     SERVER_PORT = 5000
 
